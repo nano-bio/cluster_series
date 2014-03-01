@@ -1,41 +1,5 @@
 #!/usr/bin/python
-from numpy import *
-
-import re
-
-import helplib as hl
-
-def readfile(filename):
-
-    #create empty list
-    a = []
-    try:
-        f = hl.openfile(filename)
-    except IOError:
-        raise IOError
-        
-    #we need to check if a line is actually useful
-    num_tab_num = re.compile('^[0-9]+((\.){1}[0-9]+)?\\t[0-9]+((\.){1}[0-9]+)?.*[\\r]?\\n$')
-
-    #read file, skip comment lines
-    for line in f:
-        #no comments
-        if not line.startswith('#'):
-            #only number tabulator number
-            if num_tab_num.match(line):
-                #strip newline and split by tabulator and append to array
-                a.append(line.strip('\r\n').split('\t'))
-
-    #convert list a to float array
-    data = array(a,dtype = float)
-
-    if len(data) == 0:
-        raise IOError('File did not contain any valid lines')
-
-    #close file
-    f.close()
-
-    return data
+import numpy as np
 
 def getelements(identifier):
     # Falls die Dateien mit Monomer und Core Ion nicht existieren, erstellen und
@@ -83,8 +47,8 @@ def getelements(identifier):
         raise IOError
 
 def get_daten(data,mass_start,delta):
-    mass_unten_index = argmax(nonzero(data[:,0] <= mass_start-delta))
-    temp = nonzero(data[:,0] >= mass_start+delta)
+    mass_unten_index = np.argmax(np.nonzero(data[:,0] <= mass_start-delta))
+    temp = np.nonzero(data[:,0] >= mass_start+delta)
     mass_oben_index = temp[0][0]
     #print(mass_unten_index)
     #print(mass_oben_index)
@@ -93,15 +57,15 @@ def get_daten(data,mass_start,delta):
     y_daten = data[mass_unten_index:mass_oben_index,1]
     return x_daten, y_daten
 
-def get_left_baseline(data,mass_start,delta,bin):
-    index_2 = argmax(nonzero(data[:,0] <= mass_start-delta))
+def get_left_baseline(data,mass_start,delta,bins):
+    index_2 = np.argmax(np.nonzero(data[:,0] <= mass_start-delta))
     #print(index_2)
-    if bin == 1:
+    if bins == 1:
         base_y_12 = data[index_2,1]
         x_base_left = data[index_2,0]
         y_base_left = base_y_12
     else:
-        index_1 = index_2 - bin + 1
+        index_1 = index_2 - bins + 1
         #print(index_1)
         base_y_12 = data[index_1:index_2,1]
         x_base_left = data[index_1:index_2,0].mean(axis=0)
@@ -110,21 +74,31 @@ def get_left_baseline(data,mass_start,delta,bin):
     #print(y_base_left)
     return x_base_left, y_base_left
 
-def get_right_baseline(data,mass_start,delta,bin):
-    temp = nonzero(data[:,0] > mass_start+delta)
+def get_right_baseline(data,mass_start,delta,bins):
+    temp = np.nonzero(data[:,0] > mass_start+delta)
     index_3 = temp[0][0]
     #print(index_3)
-    if bin == 1:
+    if bins == 1:
         base_y_34 = data[index_3,1]
         x_base_right = data[index_3,0]
         y_base_right = base_y_34
     else:
-        index_4 = index_3 + bin - 1
+        index_4 = index_3 + bins - 1
         #print(index_4)
         base_y_34 = data[index_3:index_4,1]
-        x_base_right = data[index_3:index_4,0].mean(axis=0)
+        x_base_right = np.mean(data[index_3:index_4,0],axis=0)
         y_base_right = base_y_34.min(0)
     #print(x_base_right)
     #print(y_base_right)
     return x_base_right, y_base_right
+    
+def get_area(data,mass_start,left_point,right_point):
+    index_l = np.argmax(np.nonzero(data[:,0] <= left_point))
+    temp = np.nonzero(data[:,0] > right_point)
+    index_r = temp[0][0]
+    x = data[index_l:index_r,0]
+    y = data[index_l:index_r,1]
+    area = np.sum(y)
+    anzahl = index_r-index_l
+    return area, anzahl
     
