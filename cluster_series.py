@@ -1,4 +1,4 @@
-# (C) 2012-2016 Arntraud Bacher
+# (C) 2012-2017 Arntraud Bacher
 # Institut für Ionenphysik und Angewandte Physik
 # Universitaet Innsbruck
 
@@ -211,7 +211,11 @@ class CSFrame(tk.Tk):
         self.ciCombo.bind('<<ComboboxSelected>>', self.selectCI)
         self.ciCombo.grid(column=0, row=1)
         ttk.Button(IonFrame, text='Add Core Ion', command=self.newCI).grid(column=1, row=1)
-
+        self.pushEditCI = ttk.Button(IonFrame, text='Edit Core Ion', command=self.editCI, state=tk.DISABLED)
+        self.pushEditCI.grid(column=0,row=2)
+        self.pushDelCI = ttk.Button(IonFrame, text='Delete Core Ion', command=self.delCI, state=tk.DISABLED)
+        self.pushDelCI.grid(column=1,row=2)
+        
         # Liste mit Monomers
         # Beschreibung
         ttk.Label(IonFrame, text='Monomer').grid(column=2, row=0,
@@ -224,7 +228,11 @@ class CSFrame(tk.Tk):
         self.moCombo.bind('<<ComboboxSelected>>', self.selectMO)
         self.moCombo.grid(column=2, row=1)
         ttk.Button(IonFrame, text='Add Monomer', command=self.newMO).grid(column=3, row=1)
-
+        self.pushEditMO = ttk.Button(IonFrame, text='Edit Monomer', command=self.editMO, state=tk.DISABLED)
+        self.pushEditMO.grid(column=2,row=2)
+        self.pushDelMO = ttk.Button(IonFrame, text='Delete Monomer', command=self.delMO, state=tk.DISABLED)
+        self.pushDelMO.grid(column=3,row=2)
+        
         # Number of Clusters
         ttk.Label(IonFrame, text='#Clusters').grid(column=4, row=0,
             sticky=tk.W+tk.E)
@@ -339,9 +347,12 @@ class CSFrame(tk.Tk):
 
     # Auswählen des Core Ions
     def selectCI(self,event):
+        self.ci_info = []
         self.ci_info = event.widget.get().split(' - ')
         temp = self.ci_info[1]
         self.ci_info[1] = float(temp)
+        self.pushEditCI.configure(state=tk.NORMAL)
+        self.pushDelCI.configure(state=tk.NORMAL)
         
     # Neues Core Ion
     def newCI(self):
@@ -349,22 +360,93 @@ class CSFrame(tk.Tk):
         'Enter new Core Ion', 'Enter name of Core Ion')
         mass_ci = tksi.askstring(
         'Enter new Core Ion', 'Enter mass of Core Ion')
-        self.coreions.append('{0} - {1}'.format(name_ci, mass_ci))
-        self.ciCombo['values'] = self.coreions
-
+        if mass_ci:
+            try:
+                float(mass_ci)
+            except:
+                return
+            self.coreions.append('{0} - {1}'.format(name_ci, mass_ci))
+            self.ciCombo['values'] = self.coreions
+            self.ciCombo.current(len(self.coreions)-1)
+            self.pushEditCI.configure(state=tk.NORMAL)
+            self.pushDelCI.configure(state=tk.NORMAL)
+            self.ci_info = []
+            self.ci_info.append(name_ci)
+            self.ci_info.append(float(mass_ci))
+        
     # Auswählen des Monomers
     def selectMO(self,event):
+        self.mo_info = []
         self.mo_info = event.widget.get().split(' - ')
         temp = self.mo_info[1]
         self.mo_info[1] = float(temp)
-
+        self.pushEditMO.configure(state=tk.NORMAL)
+        self.pushDelMO.configure(state=tk.NORMAL)
+            
+    # Neues Core Ion
     def newMO(self):
         name_mo = tksi.askstring(
         'Enter new Monomer', 'Enter name of Monomer')
         mass_mo = tksi.askstring(
         'Enter new Monomer', 'Enter mass of Monomer')
-        self.monomers.append('{0} - {1}'.format(name_mo, mass_mo))
+        if mass_mo:
+            try:
+                float(mass_mo)
+            except:
+                return
+            self.monomers.append('{0} - {1}'.format(name_mo, mass_mo))
+            self.moCombo['values'] = self.monomers
+            self.moCombo.current(len(self.monomers)-1)
+            self.pushEditMO.configure(state=tk.NORMAL)
+            self.pushDelMO.configure(state=tk.NORMAL)
+            self.mo_info = []            
+            self.mo_info.append(name_mo)
+            self.mo_info.append(float(mass_mo))
+            
+    # Editieren und Löschen von Monomer oder Core Ion
+    def editCI(self):
+        mass_ci = tksi.askstring('Edit Core Ion Mass', 'Edit Mass',initialvalue=self.ci_info[1])
+        if mass_ci:
+            try:
+                float(mass_ci)
+            except:
+                return
+            idx = self.ciCombo.current()
+            self.coreions[idx] = '{0} - {1}'.format(self.ci_info[0], mass_ci)
+            self.ciCombo['values'] = self.coreions
+            self.ciCombo.current(idx)
+            self.ci_info[1] = float(mass_ci)
+
+    def delCI(self):
+        idx = self.ciCombo.current()
+        self.coreions.pop(idx)
+        self.ciCombo['values'] = self.coreions
+        self.ci_info = []
+        self.ciCombo.set('')
+        self.pushEditCI.configure(state=tk.DISABLED)
+        self.pushDelCI.configure(state=tk.DISABLED)        
+
+    def editMO(self):
+        mass_mo = tksi.askstring('Edit Monomer Mass', 'Edit Mass',initialvalue=self.mo_info[1])
+        if mass_mo:
+            try:
+                float(mass_mo)
+            except:
+                return
+            idx = self.moCombo.current()
+            self.monomers[idx] = '{0} - {1}'.format(self.mo_info[0], mass_mo)
+            self.moCombo['values'] = self.monomers
+            self.moCombo.current(idx)
+            self.mo_info[1] = float(mass_mo)
+
+    def delMO(self):
+        idx = self.moCombo.current()
+        self.monomers.pop(idx)
         self.moCombo['values'] = self.monomers
+        self.mo_info = []
+        self.moCombo.set('')
+        self.pushEditMO.configure(state=tk.DISABLED)
+        self.pushDelMO.configure(state=tk.DISABLED) 
     
     def start(self):
         self.current_cs = 0 # Clustersize
@@ -508,7 +590,7 @@ class CSFrame(tk.Tk):
 if __name__ == '__main__':
     # Hauptfenster öffnen
     mainf = CSFrame()
-    mainf.title('Cluster Series v1.5')
+    mainf.title('Cluster Series v1.6')
     
     # Endlosschleife
     mainf.mainloop()

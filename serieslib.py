@@ -1,3 +1,7 @@
+# (C) 2012-2017 Arntraud Bacher
+# Institut für Ionenphysik und Angewandte Physik
+# Universitaet Innsbruck
+
 import numpy as np
 import json
 import os
