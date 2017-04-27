@@ -16,13 +16,13 @@ def readElements(iniData):
         coreions = json.load(f)
         f.close()
     except:
-        coreions = []
+        coreions = ["C60 - 720", "C60He - 724.002603", "C60H2O - 738.010565", "Ar - 39.962383", "CH4 - 16.031300", "13CH4 - 17.034655", "CH5 - 17.039125"]
     try:
         f = open(monomerFile,'r')
         monomers = json.load(f)
         f.close()
     except:
-        monomers = []
+        monomers = ["H2 - 2.015650", "H2 - 2.015880", "He - 4.002603", "CH4 - 16.031300"]
     return coreions, monomers
     
 def writeElements(iniData, coreions, monomers):
