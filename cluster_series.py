@@ -4,7 +4,7 @@
 
 from tkinter import ttk
 import tkinter as tk
-#from tkinter import filedialog
+from tkinter import simpledialog as tksi
 from tkinter import scrolledtext as tkst
 
 import os
@@ -345,9 +345,9 @@ class CSFrame(tk.Tk):
         
     # Neues Core Ion
     def newCI(self):
-        name_ci = tk.simpledialog.askstring(
+        name_ci = tksi.askstring(
         'Enter new Core Ion', 'Enter name of Core Ion')
-        mass_ci = tk.simpledialog.askstring(
+        mass_ci = tksi.askstring(
         'Enter new Core Ion', 'Enter mass of Core Ion')
         self.coreions.append('{0} - {1}'.format(name_ci, mass_ci))
         self.ciCombo['values'] = self.coreions
@@ -359,9 +359,9 @@ class CSFrame(tk.Tk):
         self.mo_info[1] = float(temp)
 
     def newMO(self):
-        name_mo = tkinter.simpledialog.askstring(
+        name_mo = tksi.askstring(
         'Enter new Monomer', 'Enter name of Monomer')
-        mass_mo = tkinter.simpledialog.askstring(
+        mass_mo = tksi.askstring(
         'Enter new Monomer', 'Enter mass of Monomer')
         self.monomers.append('{0} - {1}'.format(name_mo, mass_mo))
         self.moCombo['values'] = self.monomers
