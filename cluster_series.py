@@ -14,6 +14,7 @@ import matplotlib
 import configparser as cp
 import json
 matplotlib.use('TkAgg')
+from scipy.signal import savgol_filter
 
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
 # implement the default mpl key bindings
@@ -83,11 +84,12 @@ class CSParams:
     def changed(self,event):
         text = self.wert.get()
         text = text.replace(',','.')
-        self.wert.set(text)        
-        if self.mode=='value':
-            self.parent.berechne_peak()
-        elif self.mode=='deltaplot':
-            self.parent.zeichne_peak()        
+        self.wert.set(text)
+        if self.parent.current_peak:
+            if self.mode=='value':
+                self.parent.berechne_peak()
+            elif self.mode=='deltaplot':
+                self.parent.zeichne_peak()        
 
 # ----------------------------------------
 # Class CSBaseline - Linie mit verschiebaren Endpunkten
@@ -190,11 +192,22 @@ class CSFrame(tk.Tk):
         self.specFileWert = tk.StringVar()
         ttk.Entry(self, textvariable=self.specFileWert,
             state=tk.DISABLED).grid(column=0,
-            row=0, columnspan=2, sticky=tk.W+tk.E)
+            row=0, sticky=tk.W+tk.E)
         self.specFileWert.set('no spectrum file open')
-        # Savitzky-Golay-Filter fehlt noch
+        # Savitzky-Golay-Filter
+        SGFrame = ttk.LabelFrame(self, borderwidth=1, text='Savitzky-Golay')
+        SGFrame.grid(column=1,row=0,rowspan=2,sticky=tk.W+tk.E)
+        ttk.Label(SGFrame,text='Window').grid(column=0,row=0)
+        self.SGwindow = tk.IntVar()
+        ttk.Entry(SGFrame, textvariable=self.SGwindow).grid(column=0,row=1)
+        self.SGwindow.set('5')
+        ttk.Label(SGFrame,text='Order').grid(column=1,row=0)
+        self.SGorder = tk.IntVar()
+        ttk.Entry(SGFrame, textvariable=self.SGorder).grid(column=1,row=1)
+        self.SGorder.set(2)
         # window_size = 5, order = 2, deriv = 0 entspricht den Matlab-Einstellungen
-        # callback = smooth_spec       
+        self.pushSG = ttk.Button(SGFrame, text='Apply', command=self.smoothSpec, state=tk.DISABLED)
+        self.pushSG.grid(column=0,row=2)
         
         # Frame - Core Ion und Monomer
         # ----------------------------------------
@@ -248,11 +261,11 @@ class CSFrame(tk.Tk):
         # a tk.DrawingArea
         self.canvas = FigureCanvasTkAgg(peak, master=self)
         self.canvas.show()
-        self.canvas.get_tk_widget().grid(column=0, row=2, columnspan=3)
+        self.canvas.get_tk_widget().grid(column=0, row=2)
         self.canvas._tkcanvas.config(borderwidth=0,relief='sunken')
 
         toolbar_frame = ttk.Frame(self, borderwidth=0)
-        toolbar_frame.grid(column=0, row=3, columnspan=3, sticky=tk.W)
+        toolbar_frame.grid(column=0, row=3, sticky=tk.W)
         self.toolbar = NavigationToolbar2TkAgg(self.canvas,toolbar_frame)
 
         # area ist ein Axes instance
@@ -272,7 +285,7 @@ class CSFrame(tk.Tk):
         # Frame - Details zum Peak Finden
         # ----------------------------------------
         PeakFrame = ttk.Frame(self, borderwidth=0)
-        PeakFrame.grid(column=3, row=2, sticky=tk.N)
+        PeakFrame.grid(column=1, row=2, sticky=tk.N)
         # Checkbox "automatic"
         self.autoValue = tk.IntVar()
         self.autoCheck = ttk.Checkbutton(PeakFrame, text="automatic",
@@ -342,7 +355,8 @@ class CSFrame(tk.Tk):
             self.binMinL.enable()
             self.deltaMinR.enable()
             self.binMinR.enable()
-        self.smoothed = 0;
+        self.smoothed = False
+        self.pushSG.configure(state=tk.NORMAL)
 
 
     # Auswählen des Core Ions
@@ -447,7 +461,26 @@ class CSFrame(tk.Tk):
         self.moCombo.set('')
         self.pushEditMO.configure(state=tk.DISABLED)
         self.pushDelMO.configure(state=tk.DISABLED) 
-    
+
+    def smoothSpec(self):
+        try:
+            window = int(self.SGwindow.get())
+        except:
+            print('Window must be integer')
+            return
+        try:
+            order = int(self.SGorder.get())
+        except:
+            print('Order must be integer')
+            return
+        if window % 2 == 0:
+            print('Window must be odd')
+            return
+        if order >= window:
+            print('Window must be greater than order')
+            return
+        self.data[:,1] = savgol_filter(self.data[:,1], window, order)
+        
     def start(self):
         self.current_cs = 0 # Clustersize
         self.peaks = []

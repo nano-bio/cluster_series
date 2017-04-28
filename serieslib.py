@@ -54,14 +54,14 @@ def get_daten(data,mass_start,delta):
     return x_daten, y_daten
 
 def get_left_baseline(data,mass_start,delta,bins):
-    index_2 = np.argmax(np.nonzero(data[:,0] <= mass_start-delta))
+    index_2 = int(np.argmax(np.nonzero(data[:,0] <= mass_start-delta)))
     #print(index_2)
     if bins == 1:
         base_y_12 = data[index_2,1]
         x_base_left = data[index_2,0]
         y_base_left = base_y_12
     else:
-        index_1 = index_2 - bins + 1
+        index_1 = int(index_2 - bins + 1)
         #print(index_1)
         base_y_12 = data[index_1:index_2,1]
         x_base_left = data[index_1:index_2,0].mean(axis=0)
@@ -72,14 +72,14 @@ def get_left_baseline(data,mass_start,delta,bins):
 
 def get_right_baseline(data,mass_start,delta,bins):
     temp = np.nonzero(data[:,0] > mass_start+delta)
-    index_3 = temp[0][0]
+    index_3 = int(temp[0][0])
     #print(index_3)
     if bins == 1:
         base_y_34 = data[index_3,1]
         x_base_right = data[index_3,0]
         y_base_right = base_y_34
     else:
-        index_4 = index_3 + bins - 1
+        index_4 = int(index_3 + bins - 1)
         #print(index_4)
         base_y_34 = data[index_3:index_4,1]
         x_base_right = np.mean(data[index_3:index_4,0],axis=0)
